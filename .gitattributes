@@ -1,0 +1,22 @@
+# Ensure consistent line endings across environments
+* text=auto
+
+# Declare files that are truly binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg binary
+
+# Treat JSON as text for diff and merge
+*.json text
+
+# Treat markdown as text
+*.md text
+
+# Lock in text files as LF
+*.js text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.md text eol=lf

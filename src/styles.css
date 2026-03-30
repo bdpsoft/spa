@@ -1,0 +1,10 @@
+@import "tailwindcss";
+
+/* Custom styles */
+.completed {
+  @apply line-through text-gray-500;
+}
+
+.error {
+  @apply text-red-500;
+}
