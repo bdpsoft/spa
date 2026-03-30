@@ -10,6 +10,10 @@ configureRoutes(router);
 // ==================== MODULE: Menu Builder ====================
 function buildMenu(modules) {
     const navMenu = document.getElementById('nav-menu');
+    if (!navMenu) {
+        console.error('Element #nav-menu not found in DOM');
+        return;
+    }
     navMenu.innerHTML = ''; // Clear existing menu
 
     const ul = document.createElement('ul');
@@ -39,16 +43,27 @@ import { notesManager } from './modules/NotesManager.js';
 import { homeManager } from './modules/HomeManager.js';
 import { aboutManager } from './modules/AboutManager.js';
 
-// Build menu with all modules
-buildMenu([homeManager, todoManager, notesManager, aboutManager]);
+// Initialize app when DOM is ready
+function initializeApp() {
+    // Build menu with all modules
+    buildMenu([homeManager, todoManager, notesManager, aboutManager]);
 
-// Start the router
-router.handleLocation();
+    // Start the router
+    router.handleLocation();
 
-// Initialize currentManager to homeManager if not set
-if (!window.currentManager) {
-    window.currentManager = homeManager;
+    // Initialize currentManager to homeManager if not set
+    if (!window.currentManager) {
+        window.currentManager = homeManager;
+    }
+
+    // Make router globally available for the managers
+    window.router = router;
 }
 
-// Make router globally available for the managers
-window.router = router;
+// Wait for DOM to be ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeApp);
+} else {
+    // DOM is already loaded
+    initializeApp();
+}
