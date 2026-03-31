@@ -2,36 +2,38 @@
 import { DataManager } from '../DataManager.js';
 
 const notesTemplates = {
-    list: (notes) => `
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold text-gray-800 flex items-center">
-                    <span class="mr-2">📓</span> Notes
-                </h2>
-                <button data-action="add" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200 flex items-center">
-                    <span class="mr-2">➕</span> Add Note
-                </button>
+    listHeader: () => `
+        <div class="bg-white rounded-2xl p-6 shadow-sm mb-5 border border-gray-200">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900 flex items-center gap-2"><span>📓</span> Notes</h2>
+                    <p class="text-sm text-gray-500">Quickly find notes with search and keep your ideas organised.</p>
+                </div>
+                <button data-action="add" class="px-4 py-2 bg-indigo-600 text-white rounded-xl font-semibold hover:bg-indigo-700 transition">➕ Add Note</button>
             </div>
-            <div class="mb-4">
-                <input type="text" data-action="search" placeholder="Search notes..." class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            <div class="mt-4">
+                <input type="text" data-action="search" placeholder="Search notes..." value="${notesManager.searchQuery || ''}" class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
             </div>
-            <div class="space-y-3">
-                ${notes.map(note => `
-                    <div data-list-item-id="${note.id}" class="bg-gray-50 border border-gray-200 rounded-lg p-4 flex justify-between items-center hover:shadow-sm transition duration-200 cursor-pointer">
-                        <div class="flex-1 flex items-center">
-                            <span class="text-lg mr-2">📝</span>
-                            <div>
-                                <strong class="text-gray-800 block mb-1">${note.title}</strong>
-                                <span class="text-gray-600 text-sm">${note.content}</span>
-                            </div>
-                        </div>
-                        <div class="flex space-x-2 ml-4">
-                            <button data-action="edit" data-id="${note.id}" class="bg-yellow-500 hover:bg-yellow-600 text-white py-1 px-3 rounded text-sm transition duration-200">✏️ Edit</button>
-                            <button data-action="delete" data-id="${note.id}" class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded text-sm transition duration-200">🗑️ Delete</button>
-                        </div>
-                    </div>
-                `).join('')}
+        </div>
+    `,
+    listItem: (note) => `
+        <div data-list-item-id="${note.id}" class="bg-white border border-gray-200 rounded-2xl p-5 flex justify-between items-start hover:shadow-xl transition cursor-pointer">
+            <div class="flex-1">
+                <div class="flex items-center gap-2">
+                    <span>📝</span>
+                    <h3 class="text-lg font-bold text-gray-900">${note.title}</h3>
+                </div>
+                <p class="text-sm text-gray-600 mt-2">${note.content}</p>
             </div>
+            <div class="flex flex-col gap-2 ml-4">
+                <button data-action="edit" data-id="${note.id}" class="px-3 py-1 text-sm bg-yellow-500 text-white rounded-lg hover:bg-yellow-600">✏️ Edit</button>
+                <button data-action="delete" data-id="${note.id}" class="px-3 py-1 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600">🗑️ Delete</button>
+            </div>
+        </div>
+    `,
+    listFooter: () => `
+        <div class="mt-4 text-right">
+            <span class="text-sm text-gray-500">Total notes: </span><span class="font-semibold text-gray-900">${notesManager.data.length}</span>
         </div>
     `,
     details: () => '',
@@ -95,6 +97,8 @@ const notesManager = new DataManager({
         },
         search(event) {
             const query = event.target.value.toLowerCase();
+            this.searchQuery = query; // retain current search text across re-renders
+
             if (query.trim() === '') {
                 this.clearFilter();
             } else {
@@ -103,6 +107,10 @@ const notesManager = new DataManager({
                     note.content.toLowerCase().includes(query)
                 );
             }
+        },
+        clearFilter() {
+            this.searchQuery = '';
+            DataManager.prototype.clearFilter.call(this);
         }
     }
 });
@@ -115,6 +123,7 @@ notesManager.formRoute = (params) => {
     if (params.id) notesManager.renderForm(params.id);
     else notesManager.renderForm();
 };
+notesManager.searchQuery = '';
 notesManager.name = 'Notes';
 
 export { notesManager };

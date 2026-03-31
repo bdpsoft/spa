@@ -2,48 +2,39 @@
 import { DataManager } from '../DataManager.js';
 
 const todoTemplates = {
-    list: (todos) => `
-        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold text-gray-800 flex items-center">
-                    <span class="mr-2">📋</span> Todo List
-                </h2>
-                <button data-action="add" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200 flex items-center">
-                    <span class="mr-2">➕</span> Add Todo
-                </button>
+    listHeader: () => `
+        <div class="bg-white rounded-2xl p-6 shadow-sm mb-5 border border-gray-200">
+            <div class="flex flex-wrap gap-4 items-center justify-between">
+                <div>
+                    <h2 class="text-3xl font-bold text-gray-900 flex items-center gap-2"><span>📋</span> Todos</h2>
+                    <p class="text-sm text-gray-500">Organize your tasks with clarity and speed.</p>
+                </div>
+                <button data-action="add" class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-xl hover:bg-indigo-700 transition">➕ Add Todo</button>
             </div>
-            <div class="flex flex-wrap gap-2 mb-4">
-                <button data-action="filterAll" class="bg-gray-500 hover:bg-gray-600 text-white py-1 px-3 rounded text-sm transition duration-200">All</button>
-                <button data-action="filterActive" class="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded text-sm transition duration-200">Active</button>
-                <button data-action="filterCompleted" class="bg-green-500 hover:bg-green-600 text-white py-1 px-3 rounded text-sm transition duration-200">Completed</button>
+            <div class="mt-4 flex flex-wrap gap-2">
+                <button data-action="filterAll" class="px-3 py-1 rounded-lg border border-gray-300 text-sm">All</button>
+                <button data-action="filterActive" class="px-3 py-1 rounded-lg border border-gray-300 text-sm">Active</button>
+                <button data-action="filterCompleted" class="px-3 py-1 rounded-lg border border-gray-300 text-sm">Completed</button>
             </div>
-            <div class="space-y-3">
-                ${todos.map(todo => `
-                    <div data-list-item-id="${todo.id}" class="bg-gray-50 border border-gray-200 rounded-lg p-4 flex justify-between items-center hover:shadow-sm transition duration-200 cursor-pointer">
-                        <div class="flex-1 flex items-center">
-                            <span class="text-lg mr-2">📝</span>
-                            <div>
-                                <span class="flex-1 ${todo.completed ? 'line-through text-gray-500' : 'text-gray-800'}">
-                                    ${todo.title}
-                                </span>
-                            </div>
-                        </div>  
-                        <div class="flex space-x-2 ml-4">
-                        <!--
-                            <button data-action="view" data-id="${todo.id}" class="bg-gray-500 hover:bg-gray-600 text-white py-1 px-3 rounded text-sm transition duration-200">📄 View</button>
-                            <button data-action="edit" data-id="${todo.id}" class="bg-yellow-500 hover:bg-yellow-600 text-white py-1 px-3 rounded text-sm transition duration-200">✏️ Edit</button>
-                            <button data-action="delete" data-id="${todo.id}" class="bg-red-500 hover:bg-red-600 text-white py-1 px-3 rounded text-sm transition duration-200">🗑️ Delete</button>
-                        -->
-                            <button data-action="toggleComplete" data-id="${todo.id}" class="py-1 px-3 rounded text-sm transition duration-200 ${todo.completed ? 'bg-green-500 hover:bg-green-600 text-white' : 'bg-gray-400 hover:bg-gray-500 text-white'}">
-                                ${todo.completed ? '🔄 Undo' : '✅ Complete'}
-                            </button>
-                        </div>
-                    </div>
-                `).join('')}
+        </div>
+    `,
+    listItem: (todo) => `
+        <div data-list-item-id="${todo.id}" class="bg-white border border-gray-200 rounded-2xl p-5 flex justify-between items-center hover:shadow-xl transition cursor-pointer">
+            <div class="flex items-center gap-3">
+                <span class="text-xl">📝</span>
+                <div>
+                    <h3 class="font-bold text-gray-900 ${todo.completed ? 'line-through text-gray-400' : ''}">${todo.title}</h3>
+                    <p class="text-sm text-gray-500">${todo.description || 'No description'}</p>
+                </div>
             </div>
-            <button data-action="showPickup" class="bg-purple-500 hover:bg-purple-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200 flex items-center mt-4">
-                <span class="mr-2">📦</span> Pickup List
+            <button data-action="toggleComplete" data-id="${todo.id}" class="px-3 py-2 rounded-lg text-sm ${todo.completed ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}">
+                ${todo.completed ? 'Undo' : 'Complete'}
             </button>
+        </div>
+    `,
+    listFooter: () => `
+        <div class="mt-4 text-right">
+            <button data-action="showPickup" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">📦 Pickup List</button>
         </div>
     `,
     details: (todo) => `

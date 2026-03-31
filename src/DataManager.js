@@ -58,6 +58,13 @@ export class DataManager {
         }
     }
 
+    debounce(fn, delay = 250) {
+        if (this._debounceTimer) {
+            clearTimeout(this._debounceTimer);
+        }
+        this._debounceTimer = setTimeout(fn, delay);
+    }
+
     reorderItem(fromId, toId) {
         const fromIndex = this.data.findIndex(item => item.id == fromId);
         const toIndex = this.data.findIndex(item => item.id == toId);
@@ -153,26 +160,37 @@ export class DataManager {
     renderList(filter = null) {
         // Always load latest data from localStorage before rendering list
         this.loadFromLocalStorage();
-        if (!this.templates.list) return;
-        
+
         // Apply filter if provided or use current filter
         const activeFilter = filter !== null ? filter : this.currentFilter;
         let filteredData = this.data;
         if (activeFilter && typeof activeFilter === 'function') {
             filteredData = this.data.filter(activeFilter);
         }
-        
-        if (this.data.length === 0 && this.templates.default) {
-            this.renderDefault();
-        } else {
-            const content = this.templates.list(filteredData);
-            this.render(content);
-            this.currentView = 'list';
-            this.currentItemId = null;
-            this.bindActions();
 
-            // Attach list-item click action for default behavior
-            this.container.querySelectorAll('[data-list-item-id]').forEach(itemEl => {
+        if (filteredData.length === 0 && this.templates.default) {
+            this.renderDefault();
+            return;
+        }
+
+        const usesLegacyList = typeof this.templates.list === 'function';
+        const hasStructuredList = !usesLegacyList && (typeof this.templates.listHeader === 'function' || typeof this.templates.listItem === 'function' || typeof this.templates.listFooter === 'function');
+
+        const listContainer = this.container.querySelector(`.dm-list-container[data-manager="${this.name}"]`);
+        if (this.currentView === 'list' && hasStructuredList && listContainer) {
+            // Update only list-items and footer if we're already rendering this manager
+            const itemContainer = listContainer.querySelector('.dm-list-items');
+            if (itemContainer && typeof this.templates.listItem === 'function') {
+                itemContainer.innerHTML = filteredData.map(item => this.templates.listItem(item)).join('');
+            }
+
+            const footerContainer = listContainer.querySelector('.dm-list-footer');
+            if (footerContainer && typeof this.templates.listFooter === 'function') {
+                footerContainer.innerHTML = this.templates.listFooter();
+            }
+
+            this.bindActions();
+            listContainer.querySelectorAll('[data-list-item-id]').forEach(itemEl => {
                 itemEl.onclick = (e) => {
                     if (e.defaultPrevented) return;
                     const id = itemEl.getAttribute('data-list-item-id');
@@ -181,18 +199,67 @@ export class DataManager {
                     }
                 };
             });
-
-            // Setup drag-and-drop reordering if supported
             this.setupDragAndDrop();
+            return;
         }
-        
-        // Special handling for search inputs
-        const searchInput = this.container.querySelector('input[data-action="search"]');
-        if (searchInput && typeof this.search === 'function') {
-            searchInput.addEventListener('input', (e) => {
-                this.search(e);
-            });
+
+        let content = '';
+
+        if (usesLegacyList) {
+            content = this.templates.list(filteredData);
+        } else {
+            content = `<div class="dm-list-container" data-manager="${this.name}">`;
+
+            if (typeof this.templates.listHeader === 'function') {
+                content += this.templates.listHeader();
+            }
+
+            if (typeof this.templates.listItem === 'function') {
+                const itemHtml = filteredData.map(item => this.templates.listItem(item)).join('');
+                content += `<div class="dm-list-items space-y-3">${itemHtml}</div>`;
+            }
+
+            if (typeof this.templates.listFooter === 'function') {
+                content += `<div class="dm-list-footer">${this.templates.listFooter()}</div>`;
+            }
+
+            content += '</div>';
         }
+
+        this.render(content);
+        this.currentView = 'list';
+        this.currentItemId = null;
+        this.bindActions();
+
+        // Attach list-item click action for default behavior
+        this.container.querySelectorAll('[data-list-item-id]').forEach(itemEl => {
+            itemEl.onclick = (e) => {
+                if (e.defaultPrevented) return;
+                const id = itemEl.getAttribute('data-list-item-id');
+                if (id && typeof this.defaultItemAction === 'function') {
+                    this.defaultItemAction(id);
+                }
+            };
+        });
+
+        // Setup drag-and-drop reordering if supported
+        this.setupDragAndDrop();
+
+        // Attach list-item click action for default behavior
+        this.container.querySelectorAll('[data-list-item-id]').forEach(itemEl => {
+            itemEl.onclick = (e) => {
+                if (e.defaultPrevented) return;
+                const id = itemEl.getAttribute('data-list-item-id');
+                if (id && typeof this.defaultItemAction === 'function') {
+                    this.defaultItemAction(id);
+                }
+            };
+        });
+
+        // Setup drag-and-drop reordering if supported
+        this.setupDragAndDrop();
+
+        // Special handling for search input-field is left to list template logic
     }
 
     renderDetails(id) {
@@ -251,10 +318,16 @@ export class DataManager {
             const method = this[action];
             if (typeof method === 'function') {
                 if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
-                    // For input elements, bind input event for search functionality
-                    el.addEventListener('input', (e) => {
-                        method.call(this, e);
-                    });
+                    // For search fields, apply debounce on input (common UX pattern)
+                    if (action === 'search') {
+                        el.addEventListener('input', (e) => {
+                            this.debounce(() => method.call(this, e), 250);
+                        });
+                    } else {
+                        el.addEventListener('input', (e) => {
+                            method.call(this, e);
+                        });
+                    }
                 } else {
                     // For other elements, bind click event
                     el.addEventListener('click', (e) => {
