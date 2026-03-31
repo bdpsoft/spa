@@ -13,9 +13,12 @@ const notesTemplates = {
             <div class="space-y-3">
                 ${notes.map(note => `
                     <div data-list-item-id="${note.id}" class="bg-gray-50 border border-gray-200 rounded-lg p-4 flex justify-between items-center hover:shadow-sm transition duration-200 cursor-pointer">
-                        <div class="flex-1">
-                            <strong class="text-gray-800 block mb-1">${note.title}</strong>
-                            <span class="text-gray-600 text-sm">${note.content}</span>
+                        <div class="flex-1 flex items-center">
+                            <span class="text-lg mr-2">📝</span>
+                            <div>
+                                <strong class="text-gray-800 block mb-1">${note.title}</strong>
+                                <span class="text-gray-600 text-sm">${note.content}</span>
+                            </div>
                         </div>
                         <div class="flex space-x-2 ml-4">
                             <button data-action="edit" data-id="${note.id}" class="bg-yellow-500 hover:bg-yellow-600 text-white py-1 px-3 rounded text-sm transition duration-200">✏️ Edit</button>

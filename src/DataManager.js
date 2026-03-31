@@ -57,6 +57,55 @@ export class DataManager {
         }
     }
 
+    reorderItem(fromId, toId) {
+        const fromIndex = this.data.findIndex(item => item.id == fromId);
+        const toIndex = this.data.findIndex(item => item.id == toId);
+        if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return;
+
+        const [moved] = this.data.splice(fromIndex, 1);
+        this.data.splice(toIndex, 0, moved);
+        this.saveToLocalStorage();
+    }
+
+    setupDragAndDrop() {
+        this.container.querySelectorAll('[data-list-item-id]').forEach(itemEl => {
+            itemEl.setAttribute('draggable', 'true');
+
+            itemEl.addEventListener('dragstart', (event) => {
+                event.stopPropagation();
+                const id = itemEl.getAttribute('data-list-item-id');
+                event.dataTransfer.effectAllowed = 'move';
+                event.dataTransfer.setData('text/plain', id);
+                itemEl.classList.add('opacity-50');
+            });
+
+            itemEl.addEventListener('dragend', () => {
+                itemEl.classList.remove('opacity-50');
+            });
+
+            itemEl.addEventListener('dragover', (event) => {
+                event.preventDefault();
+                event.dataTransfer.dropEffect = 'move';
+                itemEl.classList.add('bg-blue-100');
+            });
+
+            itemEl.addEventListener('dragleave', () => {
+                itemEl.classList.remove('bg-blue-100');
+            });
+
+            itemEl.addEventListener('drop', (event) => {
+                event.preventDefault();
+                itemEl.classList.remove('bg-blue-100');
+                const draggedId = event.dataTransfer.getData('text/plain');
+                const targetId = itemEl.getAttribute('data-list-item-id');
+                if (draggedId && targetId && draggedId !== targetId) {
+                    this.reorderItem(draggedId, targetId);
+                    this.renderList();
+                }
+            });
+        });
+    }
+
     saveToLocalStorage() {
         localStorage.setItem(this.storageKey, JSON.stringify(this.data));
     }
@@ -120,6 +169,9 @@ export class DataManager {
                     }
                 };
             });
+
+            // Setup drag-and-drop reordering if supported
+            this.setupDragAndDrop();
         }
     }
 
