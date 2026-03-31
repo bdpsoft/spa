@@ -4,12 +4,17 @@ import { DataManager } from '../DataManager.js';
 const notesTemplates = {
     list: (notes) => `
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                <span class="mr-2">📓</span> Notes
-            </h2>
-            <button data-action="add" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200 flex items-center mb-4">
-                <span class="mr-2">➕</span> Add Note
-            </button>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                    <span class="mr-2">📓</span> Notes
+                </h2>
+                <button data-action="add" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200 flex items-center">
+                    <span class="mr-2">➕</span> Add Note
+                </button>
+            </div>
+            <div class="mb-4">
+                <input type="text" data-action="search" placeholder="Search notes..." class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            </div>
             <div class="space-y-3">
                 ${notes.map(note => `
                     <div data-list-item-id="${note.id}" class="bg-gray-50 border border-gray-200 rounded-lg p-4 flex justify-between items-center hover:shadow-sm transition duration-200 cursor-pointer">
@@ -87,11 +92,25 @@ const notesManager = new DataManager({
                 this.removeItem(id);
                 this.renderList();
             }
+        },
+        search(event) {
+            const query = event.target.value.toLowerCase();
+            if (query.trim() === '') {
+                this.clearFilter();
+            } else {
+                this.setFilter(note => 
+                    note.title.toLowerCase().includes(query) || 
+                    note.content.toLowerCase().includes(query)
+                );
+            }
         }
     }
 });
 
-notesManager.listRoute = () => notesManager.renderList();
+notesManager.listRoute = () => {
+    notesManager.clearFilter();
+    notesManager.renderList();
+};
 notesManager.formRoute = (params) => {
     if (params.id) notesManager.renderForm(params.id);
     else notesManager.renderForm();

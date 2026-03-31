@@ -32,6 +32,7 @@ export class DataManager {
         this.loadFromLocalStorage();
         this.currentView = null;
         this.currentItemId = null;
+        this.currentFilter = null;
 
         this.handleAdd = this.handleAdd.bind(this);
         this.handleUpdate = this.handleUpdate.bind(this);
@@ -139,21 +140,32 @@ export class DataManager {
         return false;
     }
 
-    async sync() {
-        if (this.onSync) {
-            await this.onSync(this.data);
-            this.saveToLocalStorage();
-        }
+    setFilter(filterFn) {
+        this.currentFilter = filterFn;
+        this.renderList();
     }
 
-    renderList() {
+    clearFilter() {
+        this.currentFilter = null;
+        this.renderList();
+    }
+
+    renderList(filter = null) {
         // Always load latest data from localStorage before rendering list
         this.loadFromLocalStorage();
         if (!this.templates.list) return;
+        
+        // Apply filter if provided or use current filter
+        const activeFilter = filter !== null ? filter : this.currentFilter;
+        let filteredData = this.data;
+        if (activeFilter && typeof activeFilter === 'function') {
+            filteredData = this.data.filter(activeFilter);
+        }
+        
         if (this.data.length === 0 && this.templates.default) {
             this.renderDefault();
         } else {
-            const content = this.templates.list(this.data);
+            const content = this.templates.list(filteredData);
             this.render(content);
             this.currentView = 'list';
             this.currentItemId = null;
@@ -172,6 +184,14 @@ export class DataManager {
 
             // Setup drag-and-drop reordering if supported
             this.setupDragAndDrop();
+        }
+        
+        // Special handling for search inputs
+        const searchInput = this.container.querySelector('input[data-action="search"]');
+        if (searchInput && typeof this.search === 'function') {
+            searchInput.addEventListener('input', (e) => {
+                this.search(e);
+            });
         }
     }
 
@@ -230,16 +250,24 @@ export class DataManager {
             const action = el.getAttribute('data-action');
             const method = this[action];
             if (typeof method === 'function') {
-                el.onclick = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const id = el.getAttribute('data-id');
-                    if (id !== null) {
-                        method.call(this, id);
-                    } else {
-                        method.call(this);
-                    }
-                };
+                if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
+                    // For input elements, bind input event for search functionality
+                    el.addEventListener('input', (e) => {
+                        method.call(this, e);
+                    });
+                } else {
+                    // For other elements, bind click event
+                    el.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const id = el.getAttribute('data-id');
+                        if (id !== null) {
+                            method.call(this, id);
+                        } else {
+                            method.call(this);
+                        }
+                    });
+                }
             }
         });
 

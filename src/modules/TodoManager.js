@@ -4,12 +4,19 @@ import { DataManager } from '../DataManager.js';
 const todoTemplates = {
     list: (todos) => `
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                <span class="mr-2">📋</span> Todo List
-            </h2>
-            <button data-action="add" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200 flex items-center mb-4">
-                <span class="mr-2">➕</span> Add Todo
-            </button>
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-800 flex items-center">
+                    <span class="mr-2">📋</span> Todo List
+                </h2>
+                <button data-action="add" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200 flex items-center">
+                    <span class="mr-2">➕</span> Add Todo
+                </button>
+            </div>
+            <div class="flex flex-wrap gap-2 mb-4">
+                <button data-action="filterAll" class="bg-gray-500 hover:bg-gray-600 text-white py-1 px-3 rounded text-sm transition duration-200">All</button>
+                <button data-action="filterActive" class="bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded text-sm transition duration-200">Active</button>
+                <button data-action="filterCompleted" class="bg-green-500 hover:bg-green-600 text-white py-1 px-3 rounded text-sm transition duration-200">Completed</button>
+            </div>
             <div class="space-y-3">
                 ${todos.map(todo => `
                     <div data-list-item-id="${todo.id}" class="bg-gray-50 border border-gray-200 rounded-lg p-4 flex justify-between items-center hover:shadow-sm transition duration-200 cursor-pointer">
@@ -173,12 +180,18 @@ const todoManager = new DataManager({
                 if (this.currentView === 'list') this.renderList();
                 else if (this.currentView === 'details') this.renderDetails(id);
             }
-        }
+        },
+        filterAll() { this.clearFilter(); },
+        filterActive() { this.setFilter(todo => !todo.completed); },
+        filterCompleted() { this.setFilter(todo => todo.completed); }
     }
 });
 
 // Add route handlers for Todo
-todoManager.listRoute = () => todoManager.renderList();
+todoManager.listRoute = () => {
+    todoManager.clearFilter();
+    todoManager.renderList();
+};
 todoManager.detailsRoute = (params) => todoManager.renderDetails(params.id);
 todoManager.formRoute = (params) => {
     if (params.id) todoManager.renderForm(params.id);
