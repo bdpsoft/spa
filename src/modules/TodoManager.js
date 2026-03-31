@@ -5,7 +5,7 @@ const todoTemplates = {
     list: (todos) => `
         <div class="bg-white rounded-lg shadow-md p-6 mb-6">
             <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                <span class="mr-2">📝</span> Todo List
+                <span class="mr-2">📋</span> Todo List
             </h2>
             <button data-action="add" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition duration-200 flex items-center mb-4">
                 <span class="mr-2">➕</span> Add Todo
@@ -13,9 +13,14 @@ const todoTemplates = {
             <div class="space-y-3">
                 ${todos.map(todo => `
                     <div data-list-item-id="${todo.id}" class="bg-gray-50 border border-gray-200 rounded-lg p-4 flex justify-between items-center hover:shadow-sm transition duration-200 cursor-pointer">
-                        <span class="flex-1 ${todo.completed ? 'line-through text-gray-500' : 'text-gray-800'}">
-                            ${todo.title}
-                        </span>
+                        <div class="flex-1 flex items-center">
+                            <span class="text-lg mr-2">📝</span>
+                            <div>
+                                <span class="flex-1 ${todo.completed ? 'line-through text-gray-500' : 'text-gray-800'}">
+                                    ${todo.title}
+                                </span>
+                            </div>
+                        </div>  
                         <div class="flex space-x-2 ml-4">
                         <!--
                             <button data-action="view" data-id="${todo.id}" class="bg-gray-500 hover:bg-gray-600 text-white py-1 px-3 rounded text-sm transition duration-200">📄 View</button>
